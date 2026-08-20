@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings & Backup | EDUNEXIS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">EDUNEXIS</div>
+                <div class="sidebar-sub">COMMAND CENTER</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="dashboard.html"><span class="icon">◈</span> Dashboard</a>
+                <a class="nav-item" href="receipt.html"><span class="icon">✎</span> Create Receipt</a>
+                <a class="nav-item" href="history.html"><span class="icon">☰</span> Receipt History</a>
+                <a class="nav-item" href="history.html#search"><span class="icon">⌕</span> Search Records</a>
+                <a class="nav-item" href="reports.html"><span class="icon">▦</span> Reports</a>
+                <a class="nav-item" href="history.html#export"><span class="icon">⇩</span> Export Data</a>
+                <a class="nav-item" href="profile.html"><span class="icon">☺</span> User Profile</a>
+                <a class="nav-item" href="security.html"><span class="icon">⬡</span> Security</a>
+                <a class="nav-item active" href="settings.html"><span class="icon">⚙</span> Settings & Backup</a>
+                <a class="nav-item" href="#" id="nav-logout"><span class="icon">⏻</span> Logout</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="db-status"><span class="status-dot status-online"></span> LOCAL DATABASE ONLINE</div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <div class="header-left">
+                        <div class="header-institute" id="hdr-institute">—</div>
+                        <div class="header-user">Logged in as <span id="hdr-user">—</span></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-datetime" id="hdr-datetime"></div>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout">Logout</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <h1 class="page-title">Settings & Backup</h1>
+                <p class="page-subtitle">Data backup, restore, and system information</p>
+
+                <div class="panel">
+                    <div class="panel-title">Backup Data</div>
+                    <p class="dim-text" style="margin-bottom:16px;font-size:0.9rem;">
+                        Export the complete application data (users, receipts, audit logs, settings) into a structured JSON backup file.
+                    </p>
+                    <button class="btn btn-primary" id="btn-backup">BACKUP DATA</button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Restore Data</div>
+                    <div class="warning-box" style="margin-bottom:16px;">
+                        Restoring will <strong>replace</strong> all current local data with the contents of the backup file.
+                        Always maintain regular backups. Browser data may be lost if browser storage is cleared.
+                    </div>
+                    <div class="form-group">
+                        <label>Select Backup File (.json)</label>
+                        <input type="file" class="form-control" id="restore-file" accept=".json,application/json">
+                    </div>
+                    <button class="btn btn-danger" id="btn-restore">RESTORE DATA</button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">System Information</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Application</label>
+                            <input type="text" class="form-control" value="EDUNEXIS Digital Data Saving & Receipt System" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Storage Engine</label>
+                            <input type="text" class="form-control" value="IndexedDB (Client-side)" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Database Status</label>
+                            <input type="text" class="form-control" id="sys-db" value="Checking..." readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Hosting</label>
+                            <input type="text" class="form-control" value="GitHub Pages Compatible (Static)" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>Important:</strong> This GitHub Pages version stores data locally in this browser/device.
+                    Data does not sync across devices. For centralized multi-user institutional data storage,
+                    a secure backend/database is required (e.g. Firebase, Supabase, Node.js + PostgreSQL/MySQL).
+                    The frontend is designed so a backend can be integrated later without a complete redesign.
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const session = window.EDUNEXIS_AUTH.requireAuth();
+        document.getElementById('hdr-institute').textContent = session.instituteName;
+        document.getElementById('hdr-user').textContent = session.fullName;
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hdr-datetime').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+                '  ' + now.toLocaleTimeString('en-IN');
+        }
+        updateClock(); setInterval(updateClock, 1000);
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        });
+        document.getElementById('sidebar-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        });
+        async function doLogout() { await window.EDUNEXIS_AUTH.logout(); window.location.href = 'index.html'; }
+        document.getElementById('btn-logout').addEventListener('click', doLogout);
+        document.getElementById('nav-logout').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+
+        (async () => {
+            await window.EDUNEXIS_DB.init();
+            const st = await window.EDUNEXIS_DB.status();
+            document.getElementById('sys-db').value = st.message;
+        })();
+
+        document.getElementById('btn-backup').addEventListener('click', async () => {
+            try {
+                await window.EDUNEXIS_BACKUP.create();
+                showToast('Backup file downloaded successfully.', 'success');
+            } catch (e) {
+                showToast(e.message || 'Backup failed.', 'error');
+            }
+        });
+
+        document.getElementById('btn-restore').addEventListener('click', async () => {
+            const fileInput = document.getElementById('restore-file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showToast('Please select a backup file.', 'error');
+                return;
+            }
+            if (!confirm('WARNING: This will replace ALL current local data with the backup. Continue?')) return;
+            if (!confirm('Final confirmation: Restore and overwrite existing data?')) return;
+
+            try {
+                await window.EDUNEXIS_BACKUP.restore(fileInput.files[0]);
+                showToast('Data restored successfully. Reloading...', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } catch (e) {
+                showToast(e.message || 'Restore failed.', 'error');
+            }
+        });
+
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+    </script>
+</body>
+</html>

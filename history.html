@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt History | EDUNEXIS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/receipt.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/print.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">EDUNEXIS</div>
+                <div class="sidebar-sub">COMMAND CENTER</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="dashboard.html"><span class="icon">◈</span> Dashboard</a>
+                <a class="nav-item" href="receipt.html"><span class="icon">✎</span> Create Receipt</a>
+                <a class="nav-item active" href="history.html"><span class="icon">☰</span> Receipt History</a>
+                <a class="nav-item" href="history.html#search"><span class="icon">⌕</span> Search Records</a>
+                <a class="nav-item" href="reports.html"><span class="icon">▦</span> Reports</a>
+                <a class="nav-item" href="history.html#export"><span class="icon">⇩</span> Export Data</a>
+                <a class="nav-item" href="profile.html"><span class="icon">☺</span> User Profile</a>
+                <a class="nav-item" href="security.html"><span class="icon">⬡</span> Security</a>
+                <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings & Backup</a>
+                <a class="nav-item" href="#" id="nav-logout"><span class="icon">⏻</span> Logout</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="db-status"><span class="status-dot status-online"></span> LOCAL DATABASE ONLINE</div>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <div class="header-left">
+                        <div class="header-institute" id="hdr-institute">—</div>
+                        <div class="header-user">Logged in as <span id="hdr-user">—</span></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-datetime" id="hdr-datetime"></div>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout">Logout</button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <h1 class="page-title">Receipt History</h1>
+                <p class="page-subtitle">Search, filter, view, print, export — original receipts are read-only</p>
+
+                <!-- Search & Filters -->
+                <div class="panel" id="search">
+                    <div class="filters-bar">
+                        <div class="form-group" style="flex:1;min-width:200px;">
+                            <label>Global Search</label>
+                            <input type="text" class="form-control" id="search-input" placeholder="Receipt No, Name, Enrollment, Mobile, Txn ID...">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" id="filter-status">
+                                <option value="">All</option>
+                                <option value="FINALIZED">Finalized</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Mode</label>
+                            <select class="form-control" id="filter-mode">
+                                <option value="">All</option>
+                                <option>Cash</option>
+                                <option>UPI</option>
+                                <option>Bank Transfer</option>
+                                <option>Card</option>
+                                <option>Cheque</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date From</label>
+                            <input type="date" class="form-control" id="filter-from">
+                        </div>
+                        <div class="form-group">
+                            <label>Date To</label>
+                            <input type="date" class="form-control" id="filter-to">
+                        </div>
+                        <button class="btn btn-sm" id="btn-filter">Apply</button>
+                        <button class="btn btn-sm btn-ghost" id="btn-clear">Clear</button>
+                    </div>
+                </div>
+
+                <div class="panel" id="export">
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+                        <button class="btn" id="btn-export">EXPORT TO EXCEL</button>
+                        <span class="dim-text" style="font-size:0.85rem;" id="record-count">0 records</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Receipt No.</th>
+                                    <th>Date</th>
+                                    <th>Student Name</th>
+                                    <th>Admission/Enroll</th>
+                                    <th>Course</th>
+                                    <th>Payment</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Generated By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body">
+                                <tr><td colspan="10" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;" id="pagination">
+                        <button class="btn btn-sm btn-ghost" id="btn-prev" disabled>← Prev</button>
+                        <span class="dim-text" id="page-info">Page 1</span>
+                        <button class="btn btn-sm btn-ghost" id="btn-next">Next →</button>
+                    </div>
+                </div>
+
+                <!-- View Modal -->
+                <div class="modal-overlay" id="view-modal">
+                    <div class="modal" style="max-width:820px;max-height:92vh;overflow-y:auto;padding:20px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                            <h3 style="margin:0;">Receipt Details <span class="locked-badge" style="font-size:0.75rem;margin-left:8px;">🔒 READ ONLY</span></h3>
+                            <div class="modal-actions" style="margin:0;">
+                                <button class="btn btn-sm" id="modal-print">Print</button>
+                                <button class="btn btn-sm" id="modal-pdf">PDF</button>
+                                <button class="btn btn-sm btn-ghost" id="modal-close-btn">Close</button>
+                            </div>
+                        </div>
+                        <div id="view-content" style="background:#ffffff;border-radius:8px;overflow:auto;padding:4px;"></div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <div class="modal-overlay" id="delete-modal">
+                    <div class="modal">
+                        <h3 style="color:var(--danger);">⚠ Permanent Deletion</h3>
+                        <p style="margin-bottom:12px;font-size:0.9rem;">WARNING: This action will permanently remove the selected receipt record.</p>
+                        <p class="dim-text" style="margin-bottom:12px;">Receipt: <strong id="del-receipt-no"></strong></p>
+                        <div class="form-group">
+                            <label>Master Delete Password *</label>
+                            <input type="password" class="form-control" id="del-master" placeholder="Enter Master Password">
+                        </div>
+                        <div class="form-group">
+                            <label>Type DELETE to confirm *</label>
+                            <input type="text" class="form-control" id="del-confirm" placeholder="DELETE">
+                        </div>
+                        <div class="form-group">
+                            <label>Reason (optional)</label>
+                            <input type="text" class="form-control" id="del-reason">
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-danger btn-sm" id="btn-confirm-delete">Permanently Delete</button>
+                            <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden print area -->
+                <div id="print-area" class="printable-receipt" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/receipts.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const session = window.EDUNEXIS_AUTH.requireAuth();
+        document.getElementById('hdr-institute').textContent = session.instituteName;
+        document.getElementById('hdr-user').textContent = session.fullName;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hdr-datetime').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+                '  ' + now.toLocaleTimeString('en-IN');
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        });
+        document.getElementById('sidebar-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        });
+
+        async function doLogout() {
+            await window.EDUNEXIS_AUTH.logout();
+            window.location.href = 'index.html';
+        }
+        document.getElementById('btn-logout').addEventListener('click', doLogout);
+        document.getElementById('nav-logout').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+
+        let allData = [];
+        let filtered = [];
+        let currentPage = 1;
+        const perPage = 15;
+        let deleteTarget = null;
+        let viewTarget = null;
+
+        async function loadHistory() {
+            await window.EDUNEXIS_DB.init();
+            allData = await window.EDUNEXIS_RECEIPTS.getUserReceipts(session.userId);
+            filtered = [...allData];
+            currentPage = 1;
+            renderTable();
+
+            // Check URL for view
+            const params = new URLSearchParams(location.search);
+            const viewNo = params.get('view');
+            if (viewNo) {
+                const r = allData.find(x => x.receiptNo === viewNo);
+                if (r) openView(r);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('history-body');
+            document.getElementById('record-count').textContent = filtered.length + ' records';
+
+            const start = (currentPage - 1) * perPage;
+            const pageData = filtered.slice(start, start + perPage);
+            const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('btn-prev').disabled = currentPage <= 1;
+            document.getElementById('btn-next').disabled = currentPage >= totalPages;
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><h3>No Receipts Found</h3><p>Create your first digital receipt to begin maintaining your records.</p><a href="receipt.html" class="btn btn-primary">CREATE FIRST RECEIPT</a></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pageData.map(r => `
+                <tr data-rno="${escapeAttr(r.receiptNo)}">
+                    <td>${escapeHtml(r.receiptNo)}</td>
+                    <td>${escapeHtml(r.date)}</td>
+                    <td>${escapeHtml(r.studentName)}</td>
+                    <td>${escapeHtml(r.admissionNo || r.enrollmentNo || '—')}</td>
+                    <td>${escapeHtml(r.course || '—')}</td>
+                    <td>${escapeHtml(r.paymentMode)}</td>
+                    <td>₹${Number(r.grandTotal).toLocaleString('en-IN')}</td>
+                    <td><span class="badge badge-${r.status === 'CANCELLED' ? 'cancelled' : 'finalized'}">${r.status}</span></td>
+                    <td>${escapeHtml(r.generatedBy)}</td>
+                    <td class="actions">
+                        <button class="btn btn-sm btn-ghost act-view">View</button>
+                        <button class="btn btn-sm btn-ghost act-print">Print</button>
+                        <button class="btn btn-sm btn-ghost act-pdf">PDF</button>
+                        <button class="btn btn-sm btn-danger act-delete">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Bind actions safely
+            tbody.querySelectorAll('tr[data-rno]').forEach(tr => {
+                const rno = tr.getAttribute('data-rno');
+                const r = filtered.find(x => x.receiptNo === rno) || allData.find(x => x.receiptNo === rno);
+                if (!r) return;
+                tr.querySelector('.act-view')?.addEventListener('click', () => openView(r));
+                tr.querySelector('.act-print')?.addEventListener('click', () => printReceipt(r));
+                tr.querySelector('.act-pdf')?.addEventListener('click', () => pdfReceipt(r));
+                tr.querySelector('.act-delete')?.addEventListener('click', () => openDelete(rno));
+            });
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function escapeAttr(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // Search
+        let searchTimeout;
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const q = e.target.value;
+                if (!q.trim()) {
+                    filtered = [...allData];
+                } else {
+                    filtered = await window.EDUNEXIS_RECEIPTS.search(session.userId, q);
+                }
+                // re-apply filters
+                applyFilters(false);
+            }, 250);
+        });
+
+        document.getElementById('btn-filter').addEventListener('click', () => applyFilters(true));
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-mode').value = '';
+            document.getElementById('filter-from').value = '';
+            document.getElementById('filter-to').value = '';
+            filtered = [...allData];
+            currentPage = 1;
+            renderTable();
+        });
+
+        async function applyFilters(fromBtn) {
+            let data = allData;
+            const q = document.getElementById('search-input').value;
+            if (q.trim()) {
+                data = await window.EDUNEXIS_RECEIPTS.search(session.userId, q);
+            }
+            const filters = {
+                status: document.getElementById('filter-status').value || undefined,
+                paymentMode: document.getElementById('filter-mode').value || undefined,
+                dateFrom: document.getElementById('filter-from').value || undefined,
+                dateTo: document.getElementById('filter-to').value || undefined
+            };
+            // Manual filter on current set
+            if (filters.status) data = data.filter(r => r.status === filters.status);
+            if (filters.paymentMode) data = data.filter(r => r.paymentMode === filters.paymentMode);
+            if (filters.dateFrom) {
+                const from = new Date(filters.dateFrom);
+                data = data.filter(r => new Date(r.isoDate) >= from);
+            }
+            if (filters.dateTo) {
+                const to = new Date(filters.dateTo);
+                to.setHours(23,59,59,999);
+                data = data.filter(r => new Date(r.isoDate) <= to);
+            }
+            filtered = data;
+            currentPage = 1;
+            renderTable();
+        }
+
+        document.getElementById('btn-prev').addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; renderTable(); }
+        });
+        document.getElementById('btn-next').addEventListener('click', () => {
+            const totalPages = Math.ceil(filtered.length / perPage);
+            if (currentPage < totalPages) { currentPage++; renderTable(); }
+        });
+
+        // View
+        function openView(r) {
+            if (!r) {
+                showToast('Receipt data not found.', 'error');
+                return;
+            }
+            viewTarget = r;
+            const box = document.getElementById('view-content');
+            if (!window.EDUNEXIS_PDF || typeof window.EDUNEXIS_PDF.buildHTML !== 'function') {
+                box.innerHTML = '<p style="color:#111;padding:16px;">Receipt viewer failed to load. Please refresh the page.</p>';
+            } else {
+                box.innerHTML = window.EDUNEXIS_PDF.buildHTML(r);
+            }
+            document.getElementById('view-modal').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('view-modal').classList.remove('active');
+        }
+        document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+        document.getElementById('view-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'view-modal') closeModal();
+        });
+        document.getElementById('modal-print').addEventListener('click', () => {
+            if (viewTarget) printReceipt(viewTarget);
+        });
+        document.getElementById('modal-pdf').addEventListener('click', async () => {
+            if (viewTarget) {
+                try {
+                    await window.EDUNEXIS_PDF.fromData(viewTarget);
+                    showToast('PDF generated!', 'success');
+                } catch (e) { showToast(e.message, 'error'); }
+            }
+        });
+
+        function printReceipt(r) {
+            const area = document.getElementById('print-area');
+            area.innerHTML = window.EDUNEXIS_PDF.buildHTML(r);
+            area.style.display = 'block';
+            window.print();
+            setTimeout(() => { area.style.display = 'none'; }, 500);
+            window.EDUNEXIS_AUTH.logAudit(session.userId, 'RECEIPT_PRINTED', r.receiptNo, 'Printed');
+        }
+
+        async function pdfReceipt(r) {
+            try {
+                await window.EDUNEXIS_PDF.fromData(r);
+                showToast('PDF generated!', 'success');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // Delete
+        function openDelete(receiptNo) {
+            deleteTarget = receiptNo;
+            document.getElementById('del-receipt-no').textContent = receiptNo;
+            document.getElementById('del-master').value = '';
+            document.getElementById('del-confirm').value = '';
+            document.getElementById('del-reason').value = '';
+            document.getElementById('delete-modal').classList.add('active');
+        }
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            deleteTarget = null;
+        }
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            const master = document.getElementById('del-master').value;
+            const confirmText = document.getElementById('del-confirm').value;
+            const reason = document.getElementById('del-reason').value;
+
+            if (confirmText !== 'DELETE') {
+                showToast('Please type DELETE to confirm.', 'error');
+                return;
+            }
+            if (!master) {
+                showToast('Master Password is required.', 'error');
+                return;
+            }
+
+            try {
+                await window.EDUNEXIS_RECEIPTS.delete(deleteTarget, session, master, reason);
+                showToast('Receipt permanently deleted.', 'success');
+                closeDeleteModal();
+                await loadHistory();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        // Export
+        document.getElementById('btn-export').addEventListener('click', async () => {
+            try {
+                const dateStr = new Date().toISOString().slice(0, 10);
+                await window.EDUNEXIS_EXPORT.toExcel(filtered, `EDUNEXIS_Receipt_Data_${dateStr}.xlsx`);
+                await window.EDUNEXIS_AUTH.logAudit(session.userId, 'DATA_EXPORTED', null, `Exported ${filtered.length} records`);
+                showToast('Excel file downloaded!', 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        });
+
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Center | EDUNEXIS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">EDUNEXIS</div>
+                <div class="sidebar-sub">COMMAND CENTER</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="dashboard.html"><span class="icon">◈</span> Dashboard</a>
+                <a class="nav-item" href="receipt.html"><span class="icon">✎</span> Create Receipt</a>
+                <a class="nav-item" href="history.html"><span class="icon">☰</span> Receipt History</a>
+                <a class="nav-item" href="history.html#search"><span class="icon">⌕</span> Search Records</a>
+                <a class="nav-item" href="reports.html"><span class="icon">▦</span> Reports</a>
+                <a class="nav-item" href="history.html#export"><span class="icon">⇩</span> Export Data</a>
+                <a class="nav-item" href="profile.html"><span class="icon">☺</span> User Profile</a>
+                <a class="nav-item active" href="security.html"><span class="icon">⬡</span> Security</a>
+                <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings & Backup</a>
+                <a class="nav-item" href="#" id="nav-logout"><span class="icon">⏻</span> Logout</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="db-status"><span class="status-dot status-online"></span> LOCAL DATABASE ONLINE</div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <div class="header-left">
+                        <div class="header-institute" id="hdr-institute">—</div>
+                        <div class="header-user">Logged in as <span id="hdr-user">—</span></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-datetime" id="hdr-datetime"></div>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout">Logout</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <h1 class="page-title">Security Center</h1>
+                <p class="page-subtitle">Account security status and password management</p>
+
+                <div class="stats-grid" id="sec-stats"></div>
+
+                <div class="panel">
+                    <div class="panel-title">Change Login Password</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Current Login Password</label>
+                            <input type="password" class="form-control" id="cl-current">
+                        </div>
+                        <div class="form-group">
+                            <label>New Login Password</label>
+                            <input type="password" class="form-control" id="cl-new">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Login Password</label>
+                            <input type="password" class="form-control" id="cl-confirm">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-2" id="btn-change-login">Update Login Password</button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Change Master Password</div>
+                    <div class="warning-box" style="margin-bottom:16px;">
+                        Master Password is required for permanent deletion of records.
+                        You must provide the <strong>current Master Password</strong> to change it.
+                        Login Password cannot be used to change the Master Password.
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Current Master Password</label>
+                            <input type="password" class="form-control" id="cm-current">
+                        </div>
+                        <div class="form-group">
+                            <label>New Master Password</label>
+                            <input type="password" class="form-control" id="cm-new">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Master Password</label>
+                            <input type="password" class="form-control" id="cm-confirm">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-2" id="btn-change-master">Update Master Password</button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Audit Log (Recent)</div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Date</th><th>Time</th><th>Action</th><th>Details</th><th>Receipt</th></tr>
+                            </thead>
+                            <tbody id="audit-body"><tr><td colspan="5">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    This is a client-side application. Passwords are hashed locally (SHA-256) and stored in IndexedDB.
+                    This does <strong>not</strong> provide bank-level or server-side security.
+                    For institutional multi-user deployments, migrate to a secure backend (Firebase, Supabase, Node.js + PostgreSQL, etc.).
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const session = window.EDUNEXIS_AUTH.requireAuth();
+        document.getElementById('hdr-institute').textContent = session.instituteName;
+        document.getElementById('hdr-user').textContent = session.fullName;
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hdr-datetime').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+                '  ' + now.toLocaleTimeString('en-IN');
+        }
+        updateClock(); setInterval(updateClock, 1000);
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        });
+        document.getElementById('sidebar-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        });
+        async function doLogout() { await window.EDUNEXIS_AUTH.logout(); window.location.href = 'index.html'; }
+        document.getElementById('btn-logout').addEventListener('click', doLogout);
+        document.getElementById('nav-logout').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+
+        async function loadSecurity() {
+            await window.EDUNEXIS_DB.init();
+            const user = await window.EDUNEXIS_DB.get(window.EDUNEXIS_DB.STORES.USERS, session.userId);
+            const dbStatus = await window.EDUNEXIS_DB.status();
+
+            document.getElementById('sec-stats').innerHTML = `
+                <div class="stat-card"><div class="stat-label">Account Status</div><div class="stat-value" style="font-size:1.1rem;color:var(--success);">${user?.status || 'ACTIVE'}</div></div>
+                <div class="stat-card"><div class="stat-label">Failed Login Attempts</div><div class="stat-value">${user?.failedAttempts || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Last Login</div><div class="stat-value" style="font-size:0.95rem;">${user?.lastLogin ? new Date(user.lastLogin).toLocaleString('en-IN') : '—'}</div></div>
+                <div class="stat-card"><div class="stat-label">Database</div><div class="stat-value" style="font-size:0.95rem;color:var(--success);">${dbStatus.message}</div></div>
+                <div class="stat-card"><div class="stat-label">Session</div><div class="stat-value" style="font-size:0.95rem;color:var(--success);">ACTIVE</div></div>
+                <div class="stat-card"><div class="stat-label">Master Password</div><div class="stat-value" style="font-size:0.95rem;color:var(--success);">SET</div></div>
+            `;
+
+            // Audit
+            const allAudit = await window.EDUNEXIS_DB.getAll(window.EDUNEXIS_DB.STORES.AUDIT);
+            const myAudit = allAudit.filter(a => a.userId === session.userId).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
+            const tbody = document.getElementById('audit-body');
+            if (myAudit.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center dim-text">No audit entries yet.</td></tr>';
+            } else {
+                tbody.innerHTML = myAudit.map(a => `
+                    <tr>
+                        <td>${a.date || '—'}</td>
+                        <td>${a.time || '—'}</td>
+                        <td>${a.action}</td>
+                        <td>${a.details || '—'}</td>
+                        <td>${a.receiptNo || '—'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('btn-change-login').addEventListener('click', async () => {
+            const current = document.getElementById('cl-current').value;
+            const neu = document.getElementById('cl-new').value;
+            const confirm = document.getElementById('cl-confirm').value;
+            if (neu !== confirm) { showToast('New passwords do not match.', 'error'); return; }
+            try {
+                await window.EDUNEXIS_AUTH.changeLoginPassword(session.userId, current, neu);
+                showToast('Login password updated.', 'success');
+                document.getElementById('cl-current').value = '';
+                document.getElementById('cl-new').value = '';
+                document.getElementById('cl-confirm').value = '';
+            } catch (e) { showToast(e.message, 'error'); }
+        });
+
+        document.getElementById('btn-change-master').addEventListener('click', async () => {
+            try {
+                await window.EDUNEXIS_AUTH.changeMasterPassword(
+                    session.userId,
+                    document.getElementById('cm-current').value,
+                    document.getElementById('cm-new').value,
+                    document.getElementById('cm-confirm').value
+                );
+                showToast('Master password updated.', 'success');
+                document.getElementById('cm-current').value = '';
+                document.getElementById('cm-new').value = '';
+                document.getElementById('cm-confirm').value = '';
+            } catch (e) { showToast(e.message, 'error'); }
+        });
+
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+        loadSecurity();
+    </script>
+</body>
+</html>

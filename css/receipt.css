@@ -1,0 +1,150 @@
+/* =====================================================
+   EDUNEXIS - Receipt Preview & Print Styles
+   ===================================================== */
+
+/* Force readable receipt colors inside dark UI */
+.edunexis-receipt-sheet,
+.edunexis-receipt-sheet * {
+    color: #111111 !important;
+    box-sizing: border-box;
+}
+.edunexis-receipt-sheet {
+    background: #ffffff !important;
+}
+.edunexis-receipt-sheet h1,
+.edunexis-receipt-sheet h2,
+.edunexis-receipt-sheet h3 {
+    color: #0a1628 !important;
+}
+#view-content .edunexis-receipt-sheet {
+    max-width: 100%;
+}
+
+.receipt-preview {
+    background: #ffffff;
+    color: #111;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    border-radius: 4px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.receipt-preview .r-header {
+    text-align: center;
+    border-bottom: 2px solid #0a1628;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.receipt-preview .r-institute {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #0a1628;
+    margin: 0;
+}
+
+.receipt-preview .r-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 6px 0 0;
+    letter-spacing: 2px;
+}
+
+.receipt-preview .r-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    color: #222;
+}
+
+.receipt-preview .r-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0a1628;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin: 16px 0 10px;
+}
+
+.receipt-preview .r-details {
+    width: 100%;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.receipt-preview .r-details td {
+    padding: 4px 8px 4px 0;
+    vertical-align: top;
+}
+
+.receipt-preview .r-fee-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+
+.receipt-preview .r-fee-table th,
+.receipt-preview .r-fee-table td {
+    border: 1px solid #333;
+    padding: 7px 10px;
+}
+
+.receipt-preview .r-fee-table th {
+    background: #f0f4f8;
+    text-align: left;
+}
+
+.receipt-preview .r-fee-table .num {
+    text-align: right;
+}
+
+.receipt-preview .r-total-row {
+    background: #e8f0ff;
+    font-weight: 700;
+}
+
+.receipt-preview .r-words {
+    font-size: 0.85rem;
+    margin: 10px 0 16px;
+    font-style: italic;
+}
+
+.receipt-preview .r-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+    font-size: 0.8rem;
+    color: #444;
+}
+
+.receipt-preview .r-sign {
+    text-align: center;
+}
+
+.receipt-preview .r-sign-line {
+    border-top: 1px solid #333;
+    width: 180px;
+    margin: 0 auto 6px;
+    padding-top: 4px;
+}
+
+.receipt-preview .r-computer {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* Screen-only receipt actions */
+.receipt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin: 24px 0;
+}

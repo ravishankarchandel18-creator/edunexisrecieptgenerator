@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EDUNEXIS - Digital Data Saving & Receipt System for college fee management">
+    <title>EDUNEXIS | Digital Data Saving & Receipt System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        .login-panel {
+            width: 100%;
+            max-width: 440px;
+            padding: 36px 32px;
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-brand h1 {
+            font-size: 2rem;
+            letter-spacing: 5px;
+            color: var(--cyan);
+            text-shadow: 0 0 20px rgba(0,240,255,0.6);
+        }
+        .login-brand p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .login-brand .tagline {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: var(--cyan-dim);
+            margin-top: 10px;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(0,240,255,0.2);
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.25s;
+        }
+        .auth-tab.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .links-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 14px 0 20px;
+            font-size: 0.85rem;
+        }
+        .links-row a {
+            color: var(--cyan-dim);
+            text-decoration: none;
+        }
+        .links-row a:hover { color: var(--cyan); }
+        .reg-section-title {
+            font-size: 0.8rem;
+            color: var(--cyan);
+            letter-spacing: 1px;
+            margin: 20px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(0,240,255,0.15);
+        }
+        .warning-box {
+            background: rgba(255,170,0,0.1);
+            border: 1px solid rgba(255,170,0,0.35);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            color: var(--warning);
+            margin: 12px 0;
+            line-height: 1.45;
+        }
+        .info-box {
+            background: rgba(0,240,255,0.06);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+        .hud-ring {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 1px solid rgba(0,240,255,0.08);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: ringPulse 6s ease-in-out infinite;
+        }
+        .hud-ring:nth-child(2) { width: 420px; height: 420px; animation-delay: 1s; }
+        .hud-ring:nth-child(3) { width: 540px; height: 540px; animation-delay: 2s; }
+        @keyframes ringPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        #welcome-screen {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        #welcome-screen h2 {
+            color: var(--cyan);
+            font-size: 1.6rem;
+            margin-bottom: 16px;
+        }
+        #welcome-screen .welcome-info {
+            background: rgba(0,40,80,0.4);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0 24px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        #welcome-screen .welcome-info div {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Initialization Screen -->
+    <div id="init-screen">
+        <div class="init-logo">EDUNEXIS</div>
+        <div class="init-sub">DIGITAL DATA SAVING & RECEIPT SYSTEM</div>
+        <div class="init-status" id="init-status">
+            <div class="line">INITIALIZING EDUNEXIS SYSTEM...</div>
+        </div>
+        <div class="spinner" style="margin-top:24px;"></div>
+    </div>
+
+    <div class="bg-grid"></div>
+    <div class="hud-ring"></div>
+    <div class="hud-ring"></div>
+    <div class="hud-ring"></div>
+
+    <div class="login-wrapper" id="login-wrapper" style="display:none;">
+        <div class="glass-panel login-panel glow-border">
+            <div class="login-brand">
+                <h1>EDUNEXIS</h1>
+                <p>Digital Data Saving & Receipt System</p>
+                <div class="tagline">SECURE • SMART • ORGANIZED • DIGITAL</div>
+            </div>
+
+            <!-- Welcome after registration -->
+            <div id="welcome-screen">
+                <h2>WELCOME TO EDUNEXIS</h2>
+                <p class="dim-text">Your workspace is ready.</p>
+                <div class="welcome-info" id="welcome-info"></div>
+                <button class="btn btn-primary w-full" onclick="goToDashboard()">GO TO DASHBOARD</button>
+            </div>
+
+            <!-- Auth forms -->
+            <div id="auth-container">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-tab="login">Login</div>
+                    <div class="auth-tab" data-tab="register">New Registration</div>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" class="auth-form active" autocomplete="on">
+                    <div class="form-group">
+                        <label for="login-userid">User ID</label>
+                        <input type="text" id="login-userid" class="form-control" placeholder="Enter User ID" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Login Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Enter Password" required autocomplete="current-password">
+                    </div>
+                    <div class="links-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember-me"> Remember Me
+                        </label>
+                        <a href="#" id="forgot-link" onclick="alert('Password recovery is not available in this local version. Please contact your administrator or restore from backup.'); return false;">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">LOGIN</button>
+                    <div class="info-box">
+                        This GitHub Pages version stores data locally in this browser/device.
+                        For centralized multi-user institutional storage, a secure backend is required.
+                    </div>
+                </form>
+
+                <!-- REGISTRATION FORM -->
+                <form id="register-form" class="auth-form" autocomplete="off">
+                    <div class="reg-section-title">USER INFORMATION</div>
+                    <div class="form-group">
+                        <label for="reg-fullname">Full Name *</label>
+                        <input type="text" id="reg-fullname" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-mobile">Mobile Number *</label>
+                        <input type="tel" id="reg-mobile" class="form-control" required pattern="[0-9]{10,15}">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Email Address *</label>
+                        <input type="email" id="reg-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-userid">User ID *</label>
+                        <input type="text" id="reg-userid" class="form-control" required minlength="3" pattern="[A-Za-z0-9_]+" title="Letters, numbers, underscore only">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-loginpass">Login Password *</label>
+                        <input type="password" id="reg-loginpass" class="form-control" required minlength="6">
+                        <div class="strength-bar"><div class="strength-fill" id="login-strength"></div></div>
+                        <small class="dim-text" id="login-strength-label"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-loginpass2">Confirm Login Password *</label>
+                        <input type="password" id="reg-loginpass2" class="form-control" required>
+                    </div>
+
+                    <div class="reg-section-title">INSTITUTE INFORMATION</div>
+                    <div class="form-group">
+                        <label for="reg-institute">Institute Name * (appears on all receipts)</label>
+                        <input type="text" id="reg-institute" class="form-control" required placeholder="Enter your institute / college name">
+                    </div>
+
+                    <div class="reg-section-title">MASTER DELETE PASSWORD</div>
+                    <div class="warning-box">
+                        Login Password and Master Password <strong>must be different</strong>.<br>
+                        Master Password is required for permanent deletion of records.<br>
+                        Keep it secure. Lost master passwords cannot be recovered automatically.
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-masterpass">Master Password *</label>
+                        <input type="password" id="reg-masterpass" class="form-control" required minlength="8">
+                        <div class="strength-bar"><div class="strength-fill" id="master-strength"></div></div>
+                        <small class="dim-text" id="master-strength-label"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-masterpass2">Confirm Master Password *</label>
+                        <input type="password" id="reg-masterpass2" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full mt-2">CREATE ACCOUNT</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // ========== INIT SEQUENCE ==========
+        async function runInit() {
+            const status = document.getElementById('init-status');
+            const lines = [
+                { text: 'INITIALIZING EDUNEXIS SYSTEM...', delay: 400 },
+                { text: 'DATABASE CONNECTION... <span class="ok">OK</span>', delay: 700 },
+                { text: 'SECURITY SYSTEM... <span class="ok">ACTIVE</span>', delay: 600 },
+                { text: 'RECEIPT ENGINE... <span class="ok">READY</span>', delay: 500 }
+            ];
+
+            status.innerHTML = '';
+            for (const line of lines) {
+                await new Promise(r => setTimeout(r, line.delay));
+                const div = document.createElement('div');
+                div.className = 'line';
+                div.innerHTML = line.text;
+                status.appendChild(div);
+            }
+
+            try {
+                await window.EDUNEXIS_DB.init();
+            } catch (e) {
+                console.error(e);
+            }
+
+            await new Promise(r => setTimeout(r, 600));
+            document.getElementById('init-screen').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('init-screen').style.display = 'none';
+                document.getElementById('login-wrapper').style.display = 'flex';
+
+                // Check existing session
+                const session = window.EDUNEXIS_AUTH.getSession();
+                if (session) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                // Remember me
+                const remembered = window.EDUNEXIS_AUTH.getRemembered();
+                if (remembered) {
+                    document.getElementById('login-userid').value = remembered;
+                    document.getElementById('remember-me').checked = true;
+                }
+            }, 600);
+        }
+
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab === 'login' ? 'login-form' : 'register-form').classList.add('active');
+            });
+        });
+
+        // Password strength
+        function updateStrength(inputId, barId, labelId) {
+            const val = document.getElementById(inputId).value;
+            const s = window.EDUNEXIS_AUTH.checkStrength(val);
+            const fill = document.getElementById(barId);
+            fill.style.width = (s.score / 5 * 100) + '%';
+            fill.style.background = s.color;
+            document.getElementById(labelId).textContent = s.label;
+            document.getElementById(labelId).style.color = s.color;
+        }
+        document.getElementById('reg-loginpass').addEventListener('input', () => updateStrength('reg-loginpass', 'login-strength', 'login-strength-label'));
+        document.getElementById('reg-masterpass').addEventListener('input', () => updateStrength('reg-masterpass', 'master-strength', 'master-strength-label'));
+
+        // Toast helper
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+
+        // LOGIN
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('login-userid').value.trim();
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('remember-me').checked;
+            try {
+                await window.EDUNEXIS_AUTH.login(userId, password, remember);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        // REGISTER
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                fullName: document.getElementById('reg-fullname').value.trim(),
+                mobile: document.getElementById('reg-mobile').value.trim(),
+                email: document.getElementById('reg-email').value.trim(),
+                userId: document.getElementById('reg-userid').value.trim(),
+                loginPassword: document.getElementById('reg-loginpass').value,
+                confirmLoginPassword: document.getElementById('reg-loginpass2').value,
+                instituteName: document.getElementById('reg-institute').value.trim(),
+                masterPassword: document.getElementById('reg-masterpass').value,
+                confirmMasterPassword: document.getElementById('reg-masterpass2').value
+            };
+            try {
+                const user = await window.EDUNEXIS_AUTH.register(data);
+                // Auto login
+                await window.EDUNEXIS_AUTH.login(data.userId, data.loginPassword, false);
+                // Show welcome
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('welcome-screen').style.display = 'block';
+                document.getElementById('welcome-info').innerHTML = `
+                    <div><strong>Institute:</strong> ${user.instituteName}</div>
+                    <div><strong>User Name:</strong> ${user.fullName}</div>
+                    <div><strong>User ID:</strong> ${user.userId}</div>
+                `;
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Start
+        runInit();
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | EDUNEXIS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">EDUNEXIS</div>
+                <div class="sidebar-sub">COMMAND CENTER</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="dashboard.html"><span class="icon">◈</span> Dashboard</a>
+                <a class="nav-item" href="receipt.html"><span class="icon">✎</span> Create Receipt</a>
+                <a class="nav-item" href="history.html"><span class="icon">☰</span> Receipt History</a>
+                <a class="nav-item" href="history.html#search"><span class="icon">⌕</span> Search Records</a>
+                <a class="nav-item active" href="reports.html"><span class="icon">▦</span> Reports</a>
+                <a class="nav-item" href="history.html#export"><span class="icon">⇩</span> Export Data</a>
+                <a class="nav-item" href="profile.html"><span class="icon">☺</span> User Profile</a>
+                <a class="nav-item" href="security.html"><span class="icon">⬡</span> Security</a>
+                <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings & Backup</a>
+                <a class="nav-item" href="#" id="nav-logout"><span class="icon">⏻</span> Logout</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="db-status"><span class="status-dot status-online"></span> LOCAL DATABASE ONLINE</div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <div class="header-left">
+                        <div class="header-institute" id="hdr-institute">—</div>
+                        <div class="header-user">Logged in as <span id="hdr-user">—</span></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-datetime" id="hdr-datetime"></div>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout">Logout</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <h1 class="page-title">Reports & Analytics</h1>
+                <p class="page-subtitle">Collection insights and receipt statistics</p>
+
+                <div class="stats-grid" id="report-stats"></div>
+
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <h4>Monthly Collection</h4>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="r-monthly"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Payment Mode Distribution</h4>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="r-payment"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Course-wise Collection</h4>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="r-course"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Daily Collection (Current Month)</h4>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="r-daily"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/receipts.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const session = window.EDUNEXIS_AUTH.requireAuth();
+        document.getElementById('hdr-institute').textContent = session.instituteName;
+        document.getElementById('hdr-user').textContent = session.fullName;
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hdr-datetime').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+                '  ' + now.toLocaleTimeString('en-IN');
+        }
+        updateClock(); setInterval(updateClock, 1000);
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        });
+        document.getElementById('sidebar-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        });
+        async function doLogout() { await window.EDUNEXIS_AUTH.logout(); window.location.href = 'index.html'; }
+        document.getElementById('btn-logout').addEventListener('click', doLogout);
+        document.getElementById('nav-logout').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+
+        async function loadReports() {
+            await window.EDUNEXIS_DB.init();
+            const receipts = await window.EDUNEXIS_RECEIPTS.getUserReceipts(session.userId);
+            const active = receipts.filter(r => r.status !== 'CANCELLED');
+            const cancelled = receipts.filter(r => r.status === 'CANCELLED');
+            const totalColl = active.reduce((s, r) => s + (r.grandTotal || 0), 0);
+            const paid = active.filter(r => r.paymentStatus === 'Paid').length;
+            const due = active.filter(r => r.paymentStatus === 'Due' || r.paymentStatus === 'Partial').length;
+
+            document.getElementById('report-stats').innerHTML = `
+                <div class="stat-card"><div class="stat-label">Total Receipts</div><div class="stat-value cyan">${active.length}</div></div>
+                <div class="stat-card"><div class="stat-label">Paid</div><div class="stat-value">${paid}</div></div>
+                <div class="stat-card"><div class="stat-label">Due / Partial</div><div class="stat-value">${due}</div></div>
+                <div class="stat-card"><div class="stat-label">Cancelled</div><div class="stat-value">${cancelled.length}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Collection</div><div class="stat-value cyan">₹${totalColl.toLocaleString('en-IN')}</div></div>
+            `;
+
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 400 },
+                plugins: { legend: { labels: { color: '#8ab4c8' } } }
+            };
+            const scaleOpts = {
+                x: { ticks: { color: '#8ab4c8' }, grid: { color: 'rgba(0,240,255,0.05)' } },
+                y: { ticks: { color: '#8ab4c8' }, grid: { color: 'rgba(0,240,255,0.05)' }, beginAtZero: true }
+            };
+
+            // Destroy old charts if any (prevents memory leak / jump on re-entry)
+            ['r-monthly', 'r-payment', 'r-course', 'r-daily'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && Chart.getChart(el)) Chart.getChart(el).destroy();
+            });
+
+            // Monthly
+            const months = Array(12).fill(0);
+            const year = new Date().getFullYear();
+            active.forEach(r => {
+                const d = new Date(r.isoDate);
+                if (d.getFullYear() === year) months[d.getMonth()] += r.grandTotal || 0;
+            });
+            new Chart(document.getElementById('r-monthly'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    datasets: [{ label: '₹', data: months, borderColor: '#00f0ff', backgroundColor: 'rgba(0,240,255,0.1)', fill: true, tension: 0.3 }]
+                },
+                options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: scaleOpts }
+            });
+
+            // Payment
+            const modes = {};
+            active.forEach(r => { modes[r.paymentMode || 'Other'] = (modes[r.paymentMode || 'Other'] || 0) + (r.grandTotal || 0); });
+            const modeLabels = Object.keys(modes).length ? Object.keys(modes) : ['No data'];
+            const modeData = Object.keys(modes).length ? Object.values(modes) : [1];
+            new Chart(document.getElementById('r-payment'), {
+                type: 'doughnut',
+                data: {
+                    labels: modeLabels,
+                    datasets: [{ data: modeData, backgroundColor: ['#00f0ff','#3b82f6','#00e676','#ffaa00','#ff4466','#a78bfa'] }]
+                },
+                options: { ...chartDefaults, plugins: { legend: { position: 'bottom', labels: { color: '#8ab4c8', boxWidth: 12 } } } }
+            });
+
+            // Course
+            const courses = {};
+            active.forEach(r => { const c = r.course || 'Other'; courses[c] = (courses[c] || 0) + (r.grandTotal || 0); });
+            const cLabels = Object.keys(courses).length ? Object.keys(courses).slice(0, 10) : ['No data'];
+            const cData = Object.keys(courses).length ? cLabels.map(c => courses[c]) : [0];
+            new Chart(document.getElementById('r-course'), {
+                type: 'bar',
+                data: {
+                    labels: cLabels,
+                    datasets: [{ data: cData, backgroundColor: 'rgba(59,130,246,0.5)', borderColor: '#3b82f6', borderWidth: 1 }]
+                },
+                options: {
+                    ...chartDefaults,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: scaleOpts
+                }
+            });
+
+            // Daily current month
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const daily = Array(daysInMonth).fill(0);
+            active.forEach(r => {
+                const d = new Date(r.isoDate);
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                    daily[d.getDate() - 1] += r.grandTotal || 0;
+                }
+            });
+            new Chart(document.getElementById('r-daily'), {
+                type: 'bar',
+                data: {
+                    labels: Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                    datasets: [{ label: '₹', data: daily, backgroundColor: 'rgba(0,230,118,0.4)', borderColor: '#00e676', borderWidth: 1 }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#8ab4c8', maxTicksLimit: 15 }, grid: { color: 'rgba(0,240,255,0.05)' } },
+                        y: { ticks: { color: '#8ab4c8' }, grid: { color: 'rgba(0,240,255,0.05)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        loadReports();
+    </script>
+</body>
+</html>

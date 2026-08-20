@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | EDUNEXIS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">EDUNEXIS</div>
+                <div class="sidebar-sub">COMMAND CENTER</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="dashboard.html"><span class="icon">◈</span> Dashboard</a>
+                <a class="nav-item" href="receipt.html"><span class="icon">✎</span> Create Receipt</a>
+                <a class="nav-item" href="history.html"><span class="icon">☰</span> Receipt History</a>
+                <a class="nav-item" href="history.html#search"><span class="icon">⌕</span> Search Records</a>
+                <a class="nav-item" href="reports.html"><span class="icon">▦</span> Reports</a>
+                <a class="nav-item" href="history.html#export"><span class="icon">⇩</span> Export Data</a>
+                <a class="nav-item active" href="profile.html"><span class="icon">☺</span> User Profile</a>
+                <a class="nav-item" href="security.html"><span class="icon">⬡</span> Security</a>
+                <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings & Backup</a>
+                <a class="nav-item" href="#" id="nav-logout"><span class="icon">⏻</span> Logout</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="db-status"><span class="status-dot status-online"></span> LOCAL DATABASE ONLINE</div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <div class="header-left">
+                        <div class="header-institute" id="hdr-institute">—</div>
+                        <div class="header-user">Logged in as <span id="hdr-user">—</span></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-datetime" id="hdr-datetime"></div>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout">Logout</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <h1 class="page-title">User Profile</h1>
+                <p class="page-subtitle">Account information — Institute name on historical receipts cannot be changed</p>
+
+                <div class="panel" id="profile-panel">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" class="form-control" id="p-fullname">
+                        </div>
+                        <div class="form-group">
+                            <label>User ID</label>
+                            <input type="text" class="form-control" id="p-userid" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" class="form-control" id="p-email">
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile</label>
+                            <input type="tel" class="form-control" id="p-mobile">
+                        </div>
+                        <div class="form-group">
+                            <label>Institute Name</label>
+                            <input type="text" class="form-control" id="p-institute" readonly title="Institute name is locked for historical receipt integrity">
+                        </div>
+                        <div class="form-group">
+                            <label>Account Created</label>
+                            <input type="text" class="form-control" id="p-created" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Login</label>
+                            <input type="text" class="form-control" id="p-lastlogin" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Status</label>
+                            <input type="text" class="form-control" id="p-status" readonly>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary" id="btn-save-profile">Save Changes</button>
+                    </div>
+                    <div class="info-box" style="margin-top:20px;">
+                        Note: The Institute Name is locked after registration to preserve the integrity of historical receipts.
+                        Historical receipts retain the institute name that existed when they were finalized.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const session = window.EDUNEXIS_AUTH.requireAuth();
+        document.getElementById('hdr-institute').textContent = session.instituteName;
+        document.getElementById('hdr-user').textContent = session.fullName;
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hdr-datetime').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+                '  ' + now.toLocaleTimeString('en-IN');
+        }
+        updateClock(); setInterval(updateClock, 1000);
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        });
+        document.getElementById('sidebar-overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        });
+        async function doLogout() { await window.EDUNEXIS_AUTH.logout(); window.location.href = 'index.html'; }
+        document.getElementById('btn-logout').addEventListener('click', doLogout);
+        document.getElementById('nav-logout').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+
+        async function loadProfile() {
+            await window.EDUNEXIS_DB.init();
+            const user = await window.EDUNEXIS_DB.get(window.EDUNEXIS_DB.STORES.USERS, session.userId);
+            if (!user) return;
+            document.getElementById('p-fullname').value = user.fullName || '';
+            document.getElementById('p-userid').value = user.userId || '';
+            document.getElementById('p-email').value = user.email || '';
+            document.getElementById('p-mobile').value = user.mobile || '';
+            document.getElementById('p-institute').value = user.instituteName || '';
+            document.getElementById('p-created').value = user.createdAt ? new Date(user.createdAt).toLocaleString('en-IN') : '—';
+            document.getElementById('p-lastlogin').value = user.lastLogin ? new Date(user.lastLogin).toLocaleString('en-IN') : '—';
+            document.getElementById('p-status').value = user.status || 'ACTIVE';
+        }
+
+        document.getElementById('btn-save-profile').addEventListener('click', async () => {
+            try {
+                const user = await window.EDUNEXIS_DB.get(window.EDUNEXIS_DB.STORES.USERS, session.userId);
+                user.fullName = document.getElementById('p-fullname').value.trim();
+                user.email = document.getElementById('p-email').value.trim();
+                user.mobile = document.getElementById('p-mobile').value.trim();
+                // instituteName intentionally NOT updated
+                await window.EDUNEXIS_DB.put(window.EDUNEXIS_DB.STORES.USERS, user);
+
+                // Update session
+                const sess = window.EDUNEXIS_AUTH.getSession();
+                sess.fullName = user.fullName;
+                sessionStorage.setItem('edunexis_session', JSON.stringify(sess));
+
+                showToast('Profile updated successfully.', 'success');
+                document.getElementById('hdr-user').textContent = user.fullName;
+            } catch (e) {
+                showToast(e.message || 'Update failed.', 'error');
+            }
+        });
+
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+        loadProfile();
+    </script>
+</body>
+</html>

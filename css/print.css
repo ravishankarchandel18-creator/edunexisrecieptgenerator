@@ -1,0 +1,54 @@
+/* =====================================================
+   EDUNEXIS - Print Styles
+   Only the professional receipt should print
+   ===================================================== */
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .printable-receipt,
+    .printable-receipt *,
+    .edunexis-receipt-sheet,
+    .edunexis-receipt-sheet *,
+    #print-area,
+    #print-area * {
+        visibility: visible;
+    }
+
+    .printable-receipt,
+    .edunexis-receipt-sheet,
+    #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff !important;
+        color: #000 !important;
+        padding: 20px;
+        box-shadow: none !important;
+    }
+
+    .no-print,
+    .sidebar,
+    .top-header,
+    .ai-panel,
+    .btn,
+    .hamburger,
+    .bg-grid,
+    .particles,
+    nav,
+    .filters-bar,
+    .page-title,
+    .page-subtitle,
+    .modal-overlay,
+    .modal-actions {
+        display: none !important;
+    }
+
+    @page {
+        margin: 12mm;
+        size: A4;
+    }
+}

@@ -1,0 +1,117 @@
+/* =====================================================
+   EDUNEXIS - Responsive Styles
+   ===================================================== */
+
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .hamburger {
+        display: block;
+    }
+
+    .top-header {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .page-content {
+        padding: 16px;
+    }
+
+    .header-datetime {
+        display: none;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filters-bar .form-group {
+        min-width: 100%;
+    }
+
+    .ai-panel {
+        width: calc(100% - 32px);
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .ai-panel.collapsed {
+        width: 48px;
+        height: 48px;
+    }
+
+    .modal {
+        padding: 20px;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-table {
+        font-size: 0.8rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .init-logo {
+        font-size: 1.8rem;
+        letter-spacing: 3px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+
+    .header-institute {
+        font-size: 0.85rem;
+    }
+}
+
+/* Print-specific overrides handled in print.css */
